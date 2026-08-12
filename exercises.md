@@ -225,7 +225,7 @@ Copy bảng terminal vào đây hoặc điền từ `artifacts/benchmark_results
 **Nhận xét ngắn:** Metric nào yếu nhất? Kết quả gợi ý vấn đề nằm ở retrieval
 hay generation?
 
-> *Câu trả lời:* Chưa thể kết luận trước khi sinh actual answers vì API key hiện tại không hợp lệ. Sau khi benchmark chạy, cần đối chiếu Recall/Precision với Faithfulness/Completeness: Recall thấp cùng Completeness thấp gợi ý lỗi retriever; retrieval tốt nhưng Faithfulness thấp gợi ý lỗi generation.
+> *Câu trả lời:* Faithfulness yếu nhất với trung bình 0.536, trong khi Context Recall 0.838 và Context Precision 0.891 khá cao. Kết quả gợi ý vấn đề chính nằm ở generation: model thêm claim ngoài context hoặc lệch intent. M04 và H04 vẫn cho thấy retrieval coverage cần cải thiện ở các câu hỏi nhiều điều kiện.
 
 ### Exercise 3.3 — LLM-as-a-Judge Rubric Design
 
@@ -241,7 +241,7 @@ Chọn 3–5 dimensions:
 - [x] Actionability
 - [x] Safety/privacy
 - [ ] Tone/clarity
-- [ ] Dimension khác: __________
+- [ ] Dimension khác
 
 | Score | Tiêu chí domain-specific | Ví dụ response |
 |---:|---|---|
@@ -269,19 +269,19 @@ verbosity bias và self-preference bằng cách nào?
 Chỉ làm sau khi hoàn thành 3.1–3.3. Chọn hai framework trong RAGAS, DeepEval
 và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 
-| Tiêu chí | Framework 1: ____ | Framework 2: ____ |
+| Tiêu chí | Framework 1: RAGAS | Framework 2: DeepEval |
 |---|---|---|
-| Setup complexity | | |
-| Metrics available | | |
-| CI/CD integration | | |
-| Kết quả trên cùng dataset | | |
-| Insight rút ra | | |
+| Setup complexity | Cần cấu hình dataset/evaluator và metric objects; phù hợp notebook/offline pipeline. | Pytest-native, tạo test case và metric assertions; dễ đưa vào CI. |
+| Metrics available | Faithfulness, answer relevance, context recall, context precision và metrics RAG chuyên biệt. | Faithfulness, answer relevancy, contextual completeness, hallucination và custom LLM metrics. |
+| CI/CD integration | Có thể tích hợp nhưng cần thêm wrapper để fail pipeline theo threshold. | Tự nhiên hơn với test assertions, threshold và report của test runner. |
+| Kết quả trên cùng dataset | Trong lab, heuristic core cho baseline: Recall 0.838, Precision 0.891, Faithfulness 0.536, Relevance 0.613, Completeness 0.813. | Dự kiến đánh giá tương tự về trend nhưng có thể khác vì LLM judge/metric prompt và threshold riêng. |
+| Insight rút ra | Mạnh ở chẩn đoán từng bước RAG và retrieval ranking. | Mạnh ở LLM unit testing và quality gate theo từng test case. |
 
-- Scores có nhất quán không?
-- Framework nào strict hơn và vì sao?
-- Hai framework có tìm ra cùng failure cases không?
+- Scores có nhất quán không? Không nhất thiết; cùng answer có thể khác điểm do prompt judge, model và cách phân đoạn claims.
+- Framework nào strict hơn và vì sao? DeepEval có thể strict hơn ở assertion nếu threshold đặt cao; RAGAS chi tiết hơn ở retrieval metrics. Không thể kết luận tuyệt đối nếu chưa khóa cùng judge/model/rubric.
+- Hai framework có tìm ra cùng failure cases không? Thường sẽ cùng phát hiện A01, M04, H04 là nhóm rủi ro, nhưng severity có thể khác; cần đối chiếu theo ID thay vì chỉ so pass rate.
 
-> *Phân tích:*
+> *Phân tích:* Chạy cùng 20 questions, actual answers và retrieved contexts; khóa model, rubric, temperature và threshold. Lưu score từng ID, aggregate, failure distribution và latency. So sánh agreement theo case và xem framework nào phát hiện thêm lỗi. Baseline lab cho thấy retrieval khá tốt nhưng faithfulness yếu, nên framework được chọn phải expose cả answer grounding lẫn retrieval diagnostics. RAGAS phù hợp phân tích RAG offline; DeepEval phù hợp biến mỗi case thành CI assertion. Kết quả DeepEval cần được ghi bổ sung sau khi cài framework và chạy thực tế; không giả định score bằng heuristic baseline.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
@@ -296,20 +296,20 @@ thay đổi Context Recall hay không.
 
 | ID | Recall before | Recall after | Precision before | Precision after | Delta Precision |
 |---|---:|---:|---:|---:|---:|
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| | | | | | |
-| **Avg** | | | | | |
+| E01 | 1.000 | 1.000 | 0.887 | 0.887 | +0.000 |
+| E02 | 0.857 | 0.857 | 1.000 | 1.000 | +0.000 |
+| E03 | 1.000 | 1.000 | 1.000 | 1.000 | +0.000 |
+| E04 | 0.875 | 0.875 | 0.917 | 0.917 | +0.000 |
+| E05 | 0.688 | 0.688 | 1.000 | 1.000 | +0.000 |
+| **Avg** | **0.884** | **0.884** | **0.961** | **0.961** | **+0.000** |
 
 **Tại sao Recall dự kiến không đổi?**
 
-> *Câu trả lời:*
+> *Câu trả lời:* Reranking chỉ thay đổi thứ tự các chunks, không thêm hoặc xóa chunk. Vì Context Recall dùng union của toàn bộ chunks, tập token evidence không đổi nên Recall không đổi. Context Precision mới có thể thay đổi vì nó tính rank-aware Average Precision. Trong 5 traces đã chọn, relevant chunks vốn đã đứng đủ sớm nên Precision giữ nguyên.
 
 **Khi nào reranking không đủ và cần sửa retriever/query/chunking?**
 
-> *Câu trả lời:*
+> *Câu trả lời:* Nếu Recall thấp, reranking không thể khôi phục evidence không được retrieve; cần query expansion, hybrid/BM25+dense retrieval hoặc tăng top-k. Nếu chunks bị cắt giữa claim, cần sửa chunking/overlap. Nếu Precision thấp vì noise nhiều, reranking có thể giúp; nếu query không biểu diễn đúng intent, cần intent detection/query rewriting trước rerank. Kết quả 5 traces không chứng minh reranker luôn cải thiện; cần đo thêm các hard/medium cases có noise và relevant chunks bị chôn sâu.
 
 ---
 
