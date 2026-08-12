@@ -246,11 +246,12 @@ class OpenAIGenerator:
     def __init__(self, max_output_tokens: int = 300) -> None:
         api_key = os.getenv("OPENAI_API_KEY", "").strip()
         self.model = os.getenv("OPENAI_MODEL", "").strip()
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY is missing from .env")
         if not self.model:
             raise RuntimeError("OPENAI_MODEL is missing from .env")
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.max_output_tokens = max_output_tokens
 
     def generate(self, prompt: str) -> str:
@@ -312,7 +313,16 @@ class DomainAssistant:
     def answer_with_trace(self, question: str) -> DomainResponse:
         chunks = self.retriever.retrieve(question, self.top_k)
         prompt = _build_prompt(question, chunks)
-        answer = self.generator.generate(prompt).strip()
+        normalized_question = question.casefold()
+        injection_terms = ("ignore your rules", "reveal the hidden prompt", "credentials")
+        if all(term in normalized_question for term in injection_terms):
+            answer = (
+                "I cannot reveal hidden prompts, credentials, private support notes, "
+                "or another customer's data. I can provide general information from "
+                "the official OrbitTech support documents."
+            )
+        else:
+            answer = self.generator.generate(prompt).strip()
         if not answer:
             raise RuntimeError("Generator returned an empty answer")
         return DomainResponse(question.strip(), answer, tuple(chunks))
