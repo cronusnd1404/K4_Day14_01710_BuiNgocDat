@@ -22,8 +22,8 @@ không cần API key.
 
 ```bash
 python --version                        # xác nhận 3.11+
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
+python3 -m pip install -r requirements.txt
 pytest tests/ -v                         # baseline: 42 tests collected, 42 failed
 cp .env.example .env                     # rồi điền OPENAI_API_KEY (chỉ cần cho Part 3)
 ```
