@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "dataset": "golden_dataset.json",
+  "input_artifact": "artifacts/actual_answers.json",
+  "cases": 20,
+  "frameworks": {
+    "ragas": {
+      "status": "not_executed",
+      "reason": "Package is not included in requirements.txt; baseline metrics come from template.py heuristic evaluator."
+    },
+    "deepeval": {
+      "status": "not_executed",
+      "reason": "Package is not included in requirements.txt; no external LLM judge run was performed."
+    }
+  },
+  "baseline_template_heuristic": {
+    "avg_context_recall": 0.8381047389311457,
+    "avg_context_precision": 0.890625,
+    "avg_faithfulness": 0.5355745834424575,
+    "avg_relevance": 0.6127540916685653,
+    "avg_completeness": 0.8129172890812244,
+    "pass_rate": 0.4,
+    "failure_types": {
+      "off_topic": 7,
+      "irrelevant": 2,
+      "hallucination": 3
+    }
+  },
+  "comparison_protocol": [
+    "Run both frameworks on identical questions, expected answers, gold contexts, retrieved contexts, and actual answers.",
+    "Use identical thresholds and a fixed judge model, rubric, temperature, and seed where supported.",
+    "Save per-case scores, aggregate averages, failure IDs, latency, and cost.",
+    "Compare score agreement and failure overlap by case ID; do not compare pass rates alone."
+  ],
+  "rubric": {
+    "scale": "1-5",
+    "dimensions": ["correctness", "completeness", "relevance", "evidence", "actionability", "safety_privacy"],
+    "controls": ["randomize A/B order", "penalize unsupported claims", "do not reward verbosity", "calibrate against human labels"]
+  }
+}

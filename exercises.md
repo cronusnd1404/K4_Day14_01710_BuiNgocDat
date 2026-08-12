@@ -274,14 +274,14 @@ và TruLens; chạy hoặc thiết kế một so sánh có cùng input dataset.
 | Setup complexity | Cần cấu hình dataset/evaluator và metric objects; phù hợp notebook/offline pipeline. | Pytest-native, tạo test case và metric assertions; dễ đưa vào CI. |
 | Metrics available | Faithfulness, answer relevance, context recall, context precision và metrics RAG chuyên biệt. | Faithfulness, answer relevancy, contextual completeness, hallucination và custom LLM metrics. |
 | CI/CD integration | Có thể tích hợp nhưng cần thêm wrapper để fail pipeline theo threshold. | Tự nhiên hơn với test assertions, threshold và report của test runner. |
-| Kết quả trên cùng dataset | Trong lab, heuristic core cho baseline: Recall 0.838, Precision 0.891, Faithfulness 0.536, Relevance 0.613, Completeness 0.813. | Dự kiến đánh giá tương tự về trend nhưng có thể khác vì LLM judge/metric prompt và threshold riêng. |
+| Kết quả trên cùng dataset | Đã ghi baseline trong `artifacts/framework_comparison_log.json`: Recall 0.838, Precision 0.891, Faithfulness 0.536, Relevance 0.613, Completeness 0.813. | Chưa chạy: package DeepEval không có trong `requirements.txt`; không ghi giả score. |
 | Insight rút ra | Mạnh ở chẩn đoán từng bước RAG và retrieval ranking. | Mạnh ở LLM unit testing và quality gate theo từng test case. |
 
 - Scores có nhất quán không? Không nhất thiết; cùng answer có thể khác điểm do prompt judge, model và cách phân đoạn claims.
 - Framework nào strict hơn và vì sao? DeepEval có thể strict hơn ở assertion nếu threshold đặt cao; RAGAS chi tiết hơn ở retrieval metrics. Không thể kết luận tuyệt đối nếu chưa khóa cùng judge/model/rubric.
 - Hai framework có tìm ra cùng failure cases không? Thường sẽ cùng phát hiện A01, M04, H04 là nhóm rủi ro, nhưng severity có thể khác; cần đối chiếu theo ID thay vì chỉ so pass rate.
 
-> *Phân tích:* Chạy cùng 20 questions, actual answers và retrieved contexts; khóa model, rubric, temperature và threshold. Lưu score từng ID, aggregate, failure distribution và latency. So sánh agreement theo case và xem framework nào phát hiện thêm lỗi. Baseline lab cho thấy retrieval khá tốt nhưng faithfulness yếu, nên framework được chọn phải expose cả answer grounding lẫn retrieval diagnostics. RAGAS phù hợp phân tích RAG offline; DeepEval phù hợp biến mỗi case thành CI assertion. Kết quả DeepEval cần được ghi bổ sung sau khi cài framework và chạy thực tế; không giả định score bằng heuristic baseline.
+> *Phân tích:* Protocol và baseline đã được lưu trong `artifacts/framework_comparison_log.json`. Cùng 20 questions, actual answers và retrieved contexts sẽ là input cố định; cần khóa model, rubric, temperature và threshold khi cài framework. Hiện environment chỉ có core heuristic trong `requirements.txt`, chưa có RAGAS/DeepEval nên external scores chưa được thực thi. Baseline cho thấy retrieval khá tốt nhưng faithfulness yếu; RAGAS phù hợp chẩn đoán RAG offline, còn DeepEval phù hợp CI assertions. Không dùng baseline heuristic để giả làm score của framework bên ngoài.
 
 ### Exercise 3.5 — Retrieval Reranking (Bonus +5)
 
